@@ -5,6 +5,9 @@
 ### Prerequisite
 * Python 3
 
+### System Environment
+macOS Sierra v10.12.4 
+
 #### Install Dependency
 ```sh
 pip install -r requirements.txt
@@ -22,7 +25,7 @@ ngrok http 5000
 #### Run the sever
 
 ```sh
-python3 app.py
+python app.py
 ```
 
 ## Finite State Machine
