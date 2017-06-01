@@ -24,123 +24,98 @@ update = ""
 
 machine = TocMachine(
     states=[
-        'user',
         'state_init',
-        'state_ask_poem',
-        'Laugh',
-        'Angry',
-        'reply(poem_website)',
-        'state_ask_num',
-        'list_not_full',
-        'check_repeat',
-        'ignore_this_num',
-        'add_num_into_list',
-        'list_full',
-        'reply(list)'
-
+        'state_get_poem',
+        'state_echo_poem',
+        'state_again',
+        'state_get_num',
+        'state_rand_num',
+        'state_echo_list',
+        'state_echo_link',
+        'state_parse',
+        'state_echo_movie_time',
+        'state_help',
+        'state_other'
     ],
     transitions=[
         {
-            'trigger': 'start_bot',
-            'source': 'user',
+            'trigger': 'advance',
+            'source': 'state_init',
             'dest': 'state_init',
+            'conditions': 'reset_init'
         },
+        ##ask poem
         {
             'trigger': 'advance',
             'source': 'state_init',
-            'dest': 'state_ask_poem',
-            'conditions': 'is_going_to_state_ask_poem'
+            'dest': 'state_get_poem',
+            'conditions': 'is_going_to_state_get_poem'
         },
         {
-            'trigger': 'rand',
-            'source': 'state_ask_poem',
-            'dest': 'reply(poem_website)',
-            'conditions': '==1(Positive)'
+            'trigger': 'get_poem',
+            'source': 'state_get_poem',
+            'dest': 'state_echo_poem',
+            'conditions': 'success'           
         },
         {
-            'trigger': 'rand',
-            'source': 'state_ask_poem',
-            'dest': 'Laugh',
-            'conditions': '==2'
-        },
-        {
-            'trigger': 'rand',
-            'source': 'state_ask_poem',
-            'dest': 'Angry',
-            'conditions': '==3'
+            'trigger': 'get_poem',
+            'source': 'state_get_poem',
+            'dest': 'state_again',
+            'conditions': 'failed'           
         },
         {
             'trigger': 'go_back',
             'source': [
-                'reply(poem_website)',
-                'Laugh',
-                'Angry',
-                'reply(list)',
-                'reply(secret)',
-                'reply(message_last)',
-                'reply(other)',
-                'reply(help_msg)'
+                'state_echo_poem',
+                'state_again'
             ],
             'dest': 'state_init'
         },
-        
+
+        ##get num
         {
             'trigger': 'advance',
             'source': 'state_init',
-            'dest': 'state_ask_num',
-            'conditions': 'is_going_to_state_ask_num'
+            'dest': 'state_get_num',
+            'conditions': 'is_going_to_state_get_num'
         },
         {
-            'trigger': 'check_list',
-            'source': 'state_ask_num',
-            'dest': 'list_not_full',
-            'conditions': '=not_full'
+            'trigger': 'init_list',
+            'source': 'state_get_num',
+            'dest': 'state_rand_num'
         },
         {
-            'trigger': 'rand',
-            'source': 'list_not_full',
-            'dest': 'check_repeat',
-            'conditions': '1-49'
+            'trigger': 'check',
+            'source': 'state_rand_num',
+            'dest': 'state_echo_list',
+            'conditions': 'full'
         },
         {
-            'trigger': 'yes',
-            'source': 'check_repeat',
-            'dest': 'ignore_this_num'
+            'trigger': 'check',
+            'source': 'state_rand_num',
+            'dest': 'state_rand_num',
+            'conditions': 'not_full'
         },
         {
-            'trigger': 'no',
-            'source': 'check_repeat',
-            'dest': 'add_num_into_list'
-        },
-        {
-            'trigger': 'again',
-            'source': 'ignore_this_num',
-            'dest': 'state_ask_num'
-        },
-        {
-            'trigger': 'move_on',
-            'source': 'add_num_into_list',
-            'dest': 'state_ask_num'
-        },
-        {
-            'trigger': 'check_list',
-            'source': 'state_ask_num',
-            'dest': 'list_full',
-            'conditions': '=full'
-        },
-        {
-            'trigger': 'sort',
-            'source': 'list_full',
-            'dest': 'reply(list)'
-        },
-       
-        {
-            'trigger': 'advance',
-            'source': 'state_init',
-            'dest': 'reply(secret)',
-            'conditions': 'is_going_to_secret'
+            'trigger': 'go_back',
+            'source': 'state_echo_list',
+            'dest': 'state_init'
         },
 
+        ###Secret
+        {
+            'trigger': 'advance',
+            'source': 'state_init',
+            'dest': 'state_echo_link',
+            'conditions': 'is_going_to_state_echo_link'
+        },
+        {
+            'trigger': 'go_back',
+            'source': 'state_echo_link',
+            'dest': 'state_init'
+        },
+
+        ###Parser
         {
             'trigger': 'advance',
             'source': 'state_init',
@@ -148,72 +123,46 @@ machine = TocMachine(
             'conditions': 'is_going_to_state_parse'
         },
         {
-            'trigger': 'starttag',
+            'trigger': 'start_parse',
             'source': 'state_parse',
-            'dest': 'check_position',
-            'conditions': 'Film'
+            'dest': 'state_echo_movie_time'
         },
         {
-            'trigger': 'beginning',
-            'source': 'check_position',
-            'dest': 'message+=Film_name',
+            'trigger': 'go_back',
+            'source': 'state_echo_movie_time',
+            'dest': 'state_init'
         },
-        {
-            'trigger': 'middle',
-            'source': 'check_position',
-            'dest': 'reply(message)',
-        },
-        {
-            'trigger': 'message_initialize',
-            'source': 'reply(message)',
-            'dest': 'message+=Film_name',
-        },
-        {
-            'trigger': 'starttag',
-            'source': 'state_parse',
-            'dest': 'message+=Day',
-            'conditions': 'Day'
-        },
-        {
-            'trigger': 'starttag',
-            'source': 'state_parse',
-            'dest': 'message+=Session',
-            'conditions': 'Session'
-        },
-        {
-            'trigger': 'endtag',
-            'source': 'state_parse',
-            'dest': 'reply(message_last)',
-            'conditions': 'html'
-        },
-        {
-            'trigger': 'continue_parse',
-            'source': [
-                'message+=Film_name',
-                'message+=Day',
-                'message+=Session'
-            ],
-            'dest': 'state_parse'
-        },
-        {
-            'trigger': 'advance',
-            'source': 'state_init',
-            'dest': 'reply(other)',
-            'conditions': 'is_going_to_other'
-        },
-        {
-            'trigger': 'advance',
-            'source': 'state_init',
-            'dest': 'reply(help_msg)',
-            'conditions': 'is_going_to_help'
-        }
 
+        ###helper
+        {
+            'trigger': 'advance',
+            'source': 'state_init',
+            'dest': 'state_help',
+            'conditions': 'is_going_to_state_help'
+        },
+        {
+            'trigger': 'go_back',
+            'source': 'state_help',
+            'dest': 'state_init'
+        },
+
+        ###other handler
+        {
+            'trigger': 'advance',
+            'source': 'state_init',
+            'dest': 'state_other',
+            'conditions': 'is_going_to_state_other'
+        },
+        {
+            'trigger': 'go_back',
+            'source': 'state_other',
+            'dest': 'state_init'
+        }
     ],
-    initial='user',
+    initial='state_init',
     auto_transitions=False,
     show_conditions=True,
 )
-
 
 class MyHTMLParser(HTMLParser):
     def handle_starttag(self, tag, attrs):
@@ -251,7 +200,7 @@ class MyHTMLParser(HTMLParser):
             update.message.reply_text(total)
 
 def _set_webhook():
-    status = bot.set_webhook('https://cd6acfbd.ngrok.io/hook')
+    status = bot.set_webhook('https://1d76e8a2.ngrok.io/hook')
     if not status:
         print('Webhook setup failed')
         sys.exit(1)
@@ -266,31 +215,44 @@ def webhook_handler():
         global update
         update = telegram.Update.de_json(request.get_json(force=True), bot)
         if update.message.text == "/start":
+            machine.advance(update);
             start_reply = "歡迎來到廟公bot\n想求籤詩請輸入 求籤\n大樂透電腦選號請輸入 大樂透\n南紡夢時代威秀影片上映時刻表請輸入 威秀";
             data_text = "start"
             update.message.reply_text(start_reply)
         elif update.message.text == t1.decode('utf-8'):
+            update.message.text="get poem"
+            machine.advance(update)
             reply_1 = random.randint(1,60);
             update.message.reply_text(reply_1)
             text = "幫你擲筊的結果為"
             update.message.reply_text(text)
             answer = random.randint(1,3);
             if answer == 1:
+                update.message.text = "success"
+                machine.get_poem(update)
                 update.message.reply_text("聖筊")
                 text1 = "http://www.chance.org.tw/籤詩集/六十甲子籤/台北新莊地藏庵六十甲子籤/籤詩網%20-%20台北新莊地藏庵六十甲子籤_第"
                 text2 = "籤.jpg"
                 text = text1 + str(reply_1) + text2
                 update.message.reply_text(text)
             elif answer == 2:
+                update.message.text = "failed"
+                machine.get_poem(update)
                 update.message.reply_text("笑筊")
                 update.message.reply_text("請在心中重新問問題並輸入 求籤") 
             elif answer == 3:
+                update.message.text = "failed"
+                machine.get_poem(update)
                 update.message.reply_text("怒筊")
                 update.message.reply_text("請在心中重新問問題並輸入 求籤")
         elif update.message.text == t2.decode('utf-8'):
+            update.message.text = "get num"
+            machine.advance(update)
             reply = ""
             my_list = []
             for i in range(0, 6, 1):
+                update.message.text = "list not full"
+                machine.check(update)
                 reply_2 = random.randint(1, 49)
                 if (reply_2 in my_list) == True:
                     T = 0
@@ -303,22 +265,30 @@ def webhook_handler():
                     my_list.append(reply_2)
             my_list.sort()
             msg = ' '.join(str(e) for e in my_list)
+            update.message.text = "list full"
+            machine.check(update)
             update.message.reply_text("本廟公幫你選的幸運號碼為: \n" + msg)
 #            update.message.reply_text(my_list)
             
         elif update.message.text == "Hi":
             update.message.reply_text("http://cdn.koreaboo.com/wp-content/uploads/2016/12/nayeon-6.jpg")
+            machine.advance(update)
             reply = "photo"
         elif update.message.text == t3.decode('utf-8'):
+            update.message.text = "start parse"
             parser = MyHTMLParser()
             parser.feed(html) 
+            machine.advance(update)
             update.message.reply_text("End")
             parser.close()
             parser.reset()
             update.message.text = ""
         elif update.message.text == "/help":
+            machine.advance(update)
             update.message.reply_text("求籤詩請輸入 求籤\n大樂透電腦選號請輸入 大樂透\n南紡夢時代威秀影片上映時刻表請輸入 威秀")
         else:
+            update.message.text = "other"
+            machine.advance(update)
             update.message.reply_text("我還沒有這個功能\n輸入 /help 查看指令")
 
     return 'ok'
